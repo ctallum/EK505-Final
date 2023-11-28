@@ -6,6 +6,7 @@ from typing import List
 import math
 import numpy as np
 
+
 class Robot:
     """
     Robot class contains information on position, velocity, and can access camera view
@@ -19,11 +20,10 @@ class Robot:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self._pose = [3, 12.5/2, 1.5] # x,y,theta
-        self._pose = [3 + 2, 12.5/2, .5] 
+        self._pose = [3, 12.5/2, 1.5]  # x,y,theta
+        self._pose = [3 + 2, 12.5/2, .5]
 
-        self._vel = [0,0] # l wheel vel, r wheel vel
-
+        self._vel = [0, 0]  # l wheel vel, r wheel vel
 
     @property
     def pose(self) -> List[int]:
@@ -31,14 +31,14 @@ class Robot:
         Return the pose of the robot as list of [x_pos, y_pos, theta]
         """
         return self._pose
-    
+
     @property
     def vel(self) -> List[int]:
         """
         Return the velocity of the robot as list of [l_vel, r_vel] in rad/sec
         """
         return self._vel
-    
+
     @vel.setter
     def vel(self, vel: List[int]) -> None:
         """
@@ -66,7 +66,7 @@ class Robot:
 
         # if robot is going in a straight line
         if omega == 0:
-            
+
             # calculate new pose
             new_x = cur_x + linear_vel_l * dt * math.cos(cur_theta)
             new_y = cur_y + linear_vel_l * dt * math.sin(cur_theta)
@@ -74,26 +74,25 @@ class Robot:
 
             # set new pose
             self._pose = [new_x, new_y, new_theta]
-        
-        # if robot is not going straight, it is going along some arch 
-        else:    
-            
+
+        # if robot is not going straight, it is going along some arch
+        else:
+
             # calculate new pose
-            ICC_R = self.track_width/2 * (linear_vel_r + linear_vel_l)/(linear_vel_r - linear_vel_l)
+            ICC_R = self.track_width/2 * \
+                (linear_vel_r + linear_vel_l)/(linear_vel_r - linear_vel_l)
             ICC_x = cur_x - ICC_R*math.sin(cur_theta)
             ICC_y = cur_y + ICC_R*math.cos(cur_theta)
 
             new_pos = np.array([[math.cos(omega*dt), -math.sin(omega*dt), 0],
                                 [math.sin(omega*dt), math.cos(omega*dt), 0],
                                 [0, 0, 1]]) @ \
-                    np.array([[cur_x - ICC_x],
+                      np.array([[cur_x - ICC_x],
                                 [cur_y - ICC_y],
                                 [cur_theta]]) + \
-                    np.array([[ICC_x],
+                      np.array([[ICC_x],
                                 [ICC_y],
                                 [omega*dt]])
-            
+
             # set new pose
             self._pose = new_pos.T[0].tolist()
-
-

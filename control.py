@@ -4,9 +4,10 @@ File to contain the control class. This is used to control the robot
 
 from typing import List
 
+
 class Control:
-    @classmethod
-    def control(cls, pose: List[int]) -> List[int]:
+    @staticmethod
+    def control(pose: List[int]) -> List[int]:
         """
         Give controls to the robot. Controls take form of left and right wheel velocities in rad/sec
         Inputs:
@@ -16,4 +17,4 @@ class Control:
             vel: List[left_w, right_w]
         """
 
-        return [5,6]
+        return [5, 6]

@@ -3,8 +3,8 @@ File to contain the world class. Contains information on background and objects
 """
 
 import os
-from os import listdir
 import random
+
 
 class World:
     """
@@ -17,15 +17,16 @@ class World:
         """
         Initialize the world with a random floor and a random object placed in front of the robot.
         """
-        
+
         # get all ground images from folder
-        self._ground_images = ["ground/"+ name for name in os.listdir(self.ground_image_dir)]
+        self._ground_images = [
+            "ground/" + name for name in os.listdir(self.ground_image_dir)]
 
         # get all obstacles images from folder
-        self._obstacle_images = ["obstacles/"+ name for name in os.listdir(self.obstacle_image_dir)]
+        self._obstacle_images = [
+            "obstacles/" + name for name in os.listdir(self.obstacle_image_dir)]
 
         self.generate_world()
-
 
     def list_images(self) -> None:
         """
@@ -44,7 +45,6 @@ class World:
         ground_idx = random.randint(0, len(self._ground_images)-1)
         self._ground = self._ground_images[2]
 
-
         # print(floor_img)
 
     @property
@@ -53,4 +53,3 @@ class World:
         Return the filename str of the ground image
         """
         return self._ground
-
