@@ -6,10 +6,6 @@ from typing import List
 import math
 import numpy as np
 
-from camera import Camera
-
-
-
 class Robot:
     """
     Robot class contains information on position, velocity, and can access camera view
@@ -23,9 +19,11 @@ class Robot:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self._pose = [0,0,0] # x,y,theta
+        self._pose = [3, 12.5/2, 1.5] # x,y,theta
+        self._pose = [3 + 2, 12.5/2, .5] 
+
         self._vel = [0,0] # l wheel vel, r wheel vel
-        self._camera = Camera()
+
 
     @property
     def pose(self) -> List[int]:
@@ -98,10 +96,4 @@ class Robot:
             # set new pose
             self._pose = new_pos.T[0].tolist()
 
-    @property
-    def camera_view(self) -> np.ndarray:
-        """
-        Get access to the camera view from the robot's current position
-        """
-        return self._camera.view
-        
+
