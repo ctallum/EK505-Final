@@ -6,6 +6,9 @@ from typing import List
 
 
 class Control:
+    """
+    Class to control the robot depending on it's pose and what it can see
+    """
     @staticmethod
     def control(pose: List[int]) -> List[int]:
         """

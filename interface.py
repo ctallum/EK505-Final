@@ -2,12 +2,10 @@
 File to create a pygame window for plotting
 """
 
+import math
 import pygame
 from pygame.locals import *
 import sys
-import math
-
-import numpy as np
 
 from world import World
 from robot import Robot
@@ -128,9 +126,9 @@ class Interface:
 
         box = 400
 
-        pygame.draw.line(self.display, red, (loc_x + box/2*math.sin(theta), 
+        pygame.draw.line(self.display, red, (loc_x + box/2*math.sin(theta),
                                              loc_y + box/2*math.cos(theta)),
-                                            (loc_x - box/2*math.sin(theta), 
+                                            (loc_x - box/2*math.sin(theta),
                                              loc_y - box/2*math.cos(theta)),
                                              width=10)
 
@@ -169,7 +167,7 @@ class Interface:
         self.display.blit(camera_view, (3750-camera_size, 0))
 
         # draw black border around camera view
-        pygame.draw.line(self.display, black, (3750-camera_size-5,camera_size), 
+        pygame.draw.line(self.display, black, (3750-camera_size-5,camera_size),
                         (3750, camera_size), width=20)
         pygame.draw.line(self.display, black, (3750-camera_size, camera_size + 5),
                         (3750-camera_size, 0), width=20)

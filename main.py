@@ -44,6 +44,8 @@ class Simulation:
         if dist_to_goal < self.threshold or nb_steps > self.max_steps:
             return True
 
+        return False
+
     def get_control(self) -> List[int]:
         """
         Get control for robot given current pose of the robot and the world [TODO]

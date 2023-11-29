@@ -3,8 +3,8 @@ File to contain the Camera class
 """
 
 from typing import List
-import pygame
 import math
+import pygame
 
 from world import World
 
@@ -57,3 +57,10 @@ class Camera:
         sub_sub_crop = sub_crop.subsurface((shape[0]/2 - box/2, shape[1]/2 - box/2, box, box))
 
         return sub_sub_crop
+
+    def into_array(self) -> None:
+        """
+        Convert camera data from Pygame surface into a camera picture array (nxnx3)
+        """
+
+        pass
