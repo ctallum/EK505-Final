@@ -168,7 +168,7 @@ class Interface:
         camera_size = 1250
 
         # get view from camera
-        camera_view = self.camera.view(self.robot.pose)
+        camera_view = self.camera.camera_view
 
         # scale the camera view up
         camera_view = pygame.transform.scale(camera_view, (camera_size, camera_size))

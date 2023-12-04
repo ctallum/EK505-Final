@@ -84,12 +84,23 @@ class Simulation:
             # iterate a single step
             self.robot.step()
 
+            # get camera data
+            self.camera.view(self.robot.pose)
+            self.camera.into_array()
+            # self.camera.into_sam()
+
             # plot everything
             self.interface.update()
 
             nb_steps += 1
 
+            # plt.imshow(self.camera.annotated_image)
+
+            break
+
 
 if __name__ == "__main__":
     simulation = Simulation()
     simulation.run()
+
+    plt.show()
