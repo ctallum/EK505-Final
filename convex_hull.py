@@ -86,8 +86,28 @@ def graham_scan(pts):
 
     return conv_hull
 
+def densify(convex, step):
+    """
+    Function that adds points along each edge of a convex hull
+    at an increment equal to 'step'
+    """
+    new_hull = []
+    for idx, pt in enumerate(convex):
+        new_hull.append(pt)
+        if idx < len(convex) - 1:
+            pt2 = convex[idx+1]
+        else:
+            pt = convex[-1]
+            pt2 = convex[0]
+        direction = (pt2 - pt) / np.linalg.norm(pt2 - pt)
+        pt_new = pt + direction * step
+        while np.linalg.norm(pt2-pt_new) > step:
+            new_hull.append(pt_new.copy())
+            pt_new += direction * step
+    return new_hull
+
 if __name__ == '__main__':
-    test_pts = rand_2d(100, -10, 10, -1, 1)
+    test_pts = rand_2d(100, -10, 4, -4, 6)
     c_hull = graham_scan(test_pts)
     plt.scatter(test_pts[0,:], test_pts[1,:])
     test_pts_sorted = sort_cos(test_pts)
@@ -96,6 +116,10 @@ if __name__ == '__main__':
     for elem in c_hull:
         hull_x.append(elem[0])
         hull_y.append(elem[1])
+    plt.scatter(hull_x, hull_y, color='r')
     plt.plot(hull_x, hull_y,'r-')
+    hull_2 = densify(c_hull, 1)
+    for val in hull_2:
+        plt.scatter(val[0], val[1], color='g', marker='*')
     plt.axis('equal')
     plt.show()

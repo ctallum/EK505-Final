@@ -38,12 +38,23 @@ class Obstacle():
         # Compute convex hull of obstacle points
         self.c_hull = convex_hull.graham_scan(self.pts)
 
-    def plot(self, points = False, hull = True):
+    def densify(self, step):
+        """
+        Increase density of points in obstacle convex hull 
+        at increments 'step' along each edge
+        """
+        self.c_hull = convex_hull.densify(self.c_hull, step)
+
+    def plot(self, obs_points = False, hull_pts = False, hull = True):
         """
         Plots obstacle
         """
-        if points:  # plot individual points
+        if obs_points:  # plot individual points
             plt.scatter(self.pts[0,:], self.pts[1,:])
+        
+        if hull_pts:    # plot hull points
+            for elem in self.c_hull:
+                plt.scatter(elem[0], elem[1])
 
         if hull:    # plot convex hull
             hull_x = []
@@ -67,12 +78,12 @@ class World():
         """
         self.obstacles.append(obstacle)
 
-    def plot(self):
+    def plot(self, obs_points = False, hull_pts = False, hull = True):
         """
         Plots world with obstacles
         """
         for obs in self.obstacles:
-            obs.plot()
+            obs.plot(obs_points, hull_pts, hull)
         plt.scatter(self.goal[0], self.goal[1], color='g', marker='*')
 
 class Robot():
@@ -123,7 +134,7 @@ class ClfCbfControl:
         grad_u_attr = p * np.linalg.norm(x_eval - x_goal)**(p-2) * (x_eval - x_goal)
         return - grad_u_attr
 
-    def control(self, x_eval):
+    def control(self, x_eval, step):
         """
         Computes optimal (CBF/CLF) control based on current position of 
         robot (x_eval)
@@ -134,6 +145,8 @@ class ClfCbfControl:
         # into a single list
         all_hull_pts = []
         for obs in self.world.obstacles:
+            # Densify convex hull
+            obs.densify(step)
             for pt in obs.c_hull:
                 all_hull_pts.append(pt)
         tot_hull_pts = len(all_hull_pts)
@@ -158,7 +171,7 @@ def planner_test():
     """
     Function for testing CLF-CBF-QP planner
     """
-    pts = convex_hull.rand_2d(100,3,4,3,4)
+    pts = convex_hull.rand_2d(50,3,7,5.5,3.5)
     obs = Obstacle(pts)
 
     goal = np.array([[10],[10]])
@@ -170,11 +183,11 @@ def planner_test():
     epsilon = 0.5
     while np.linalg.norm(robot.center - goal) >= 0.5:
         controller = ClfCbfControl(world, robot)
-        u = controller.control(robot.center)
+        u = controller.control(robot.center, step=0.2)
         robot.center = robot.center + epsilon * u
-        world.plot()
         robot.plot()
-        plt.show()
+    world.plot(hull_pts = True)
+    plt.show()
 
 
 if __name__ == '__main__':
