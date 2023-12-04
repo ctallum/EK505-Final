@@ -181,6 +181,11 @@ class Interface:
                         (3750, camera_size), width=20)
         pygame.draw.line(self.display, black, (3750-camera_size, camera_size + 5),
                         (3750-camera_size, 0), width=20)
+        
+        if self.robot.detects_obstacles:
+            font = pygame.font.Font("freesansbold.ttf", 100)
+            text = font.render("Detected Obstacle!", True, (255, 0, 0))
+            self.display.blit(text, (2700,1300))
 
 
     def plot_goal(self) -> None:

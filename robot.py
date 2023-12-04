@@ -6,6 +6,8 @@ from typing import List
 import math
 import numpy as np
 
+from camera import Camera
+
 
 class Robot:
     """
@@ -16,13 +18,16 @@ class Robot:
     wheel_diameter = 0.2
     track_width = 0.3
 
-    def __init__(self) -> None:
+    def __init__(self, camera: Camera) -> None:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self._pose = [4, 4, math.pi/4]  # x,y,theta
+        self._pose = [1, 1, math.pi/4]  # x,y,theta
 
         self._vel = [0, 0]  # l wheel vel, r wheel vel
+
+        self.camera = camera
+        self.detects_obstacles = False
 
     @property
     def pose(self) -> List[int]:
@@ -95,3 +100,14 @@ class Robot:
 
             # set new pose
             self._pose = new_pos.T[0].tolist()
+        
+        # update camera
+        process_camera = True
+        if process_camera:
+            self.camera.get_processed_view(self.pose)
+        else:
+            self.camera.get_unprocessed_view(self.pose)
+
+        self.detects_obstacles = self.camera.detects_obstacles
+        
+

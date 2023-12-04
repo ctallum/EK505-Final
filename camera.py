@@ -11,6 +11,7 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 import cv2
 import supervision as sv
 import time
+import imutils
 
 from world import World
 
@@ -39,11 +40,15 @@ class Camera:
         # setup surface for camera view
         self.camera_view = pygame.Surface((self.box_view, self.box_view))
 
-        # setup some SAM stuff
-        self.SAM = sam_model_registry["vit_h"](checkpoint="sam_vit_h_4b8939.pth")
-        self.mask_generator = SamAutomaticMaskGenerator(self.SAM)
+        self.detects_obstacles = False
+        self.obstacle_loc = None
+        self.obstacle_center = None
 
-    def view(self, pose: List[int]):
+        # setup some SAM stuff
+        # self.SAM = sam_model_registry["vit_h"](checkpoint="sam_vit_h_4b8939.pth")
+        # self.mask_generator = SamAutomaticMaskGenerator(self.SAM)
+
+    def get_raw_view(self, pose: List[int]):
         """
         Take the robot's pose and generate a png image that represent's the virtual
         camera's view
@@ -73,17 +78,65 @@ class Camera:
         shape = sub_crop.get_size()
         sub_sub_crop = sub_crop.subsurface((shape[0]/2 - self.box_view/2, shape[1]/2 - self.box_view/2, self.box_view, self.box_view))
 
-        self.camera_view = sub_sub_crop
+        return sub_sub_crop
 
-    def into_array(self) -> None:
+    def get_unprocessed_view(self, pose: List[int]):
+        self.camera_view = self.get_raw_view(pose)
+
+    def get_processed_view(self, pose: List[int]):
+        surface = self.get_raw_view(pose)
+        array = self.into_array(surface)
+        masked_image = self.into_color_mask(array)
+        self.into_surface(masked_image)
+        self.detect_obstacles(masked_image)
+
+
+    def detect_obstacles(self, array: np.ndarray) -> None:
+        lower = np.array([80,80,80])
+        upper = np.array([180,180,180])
+
+        
+
+        def find_color(frame, lower, upper):
+            mask = cv2.inRange(frame, lower, upper)#create mask with boundaries 
+            mask = ~mask
+
+            plt.imshow(mask)
+            cnts = cv2.findContours(mask, cv2.RETR_TREE, 
+                                cv2.CHAIN_APPROX_SIMPLE) # find contours from mask
+            cnts = imutils.grab_contours(cnts)
+            for c in cnts:
+                area = cv2.contourArea(c) # find how big countour is
+                # print(area)
+                if 20000 >area > 1000:       # only if countour is big enough, then
+                    M = cv2.moments(c)
+                    cx = int(M['m10'] / M['m00']) # calculate X position
+                    cy = int(M['m01'] / M['m00']) # calculate Y position
+                    return c, cx, cy
+
+        if find_color(array, lower, upper):
+            c, cx, cy = find_color(array, lower, upper)
+            c = np.reshape(c,(-1,2) )
+            
+            self.obstacle_loc = c
+            self.obstacle_center = (cx,cy)
+
+            self.detects_obstacles = True
+        else: 
+            self.detects_obstacles = False
+
+
+
+
+    def into_array(self, surface) -> np.ndarray:
         """
         Convert camera data from Pygame surface into a camera picture array (nxnx3)
         """
-        array = pygame.surfarray.pixels3d(self.camera_view)
-        self.camera_view_array = array
-        # print((array))
+        array = pygame.surfarray.pixels3d(surface)
+ 
+        return array
+        
 
-        plt.imshow(array)
 
     def into_sam(self) -> None:
         start = time.time()
@@ -107,5 +160,25 @@ class Camera:
         #     grid_size=(1, 2),
         #     titles=['source image', 'segmented image']
         # )
+
+    def into_color_mask(self, img) -> None:
+
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+
         
+        twoDimage = img.reshape((-1,3))
+        twoDimage = np.float32(twoDimage)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        K = 2
+        attempts=10
+
+        ret,label,center=cv2.kmeans(twoDimage,K,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
+        center = np.uint8(center)
+        res = center[label.flatten()]
+        result_image = res.reshape((img.shape))
+
+        return result_image
+
+    def into_surface(self, array) -> None:
+        self.camera_view = pygame.surfarray.make_surface(array)
 

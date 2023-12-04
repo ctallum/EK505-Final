@@ -62,7 +62,7 @@ class World:
         self.obstacle = pygame.image.load(self._obstacle_images[obstacle_idx])
 
         # set random scale of wood between 6in and 1ft
-        obstacle_size = random.random()*100 + 100 
+        obstacle_size = random.random()*50 + 150 
         obstacle_width = self.obstacle.get_width()
         scale_factor = obstacle_size/obstacle_width
         self.obstacle = pygame.transform.scale_by(self.obstacle, scale_factor)

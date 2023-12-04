@@ -24,9 +24,9 @@ class Simulation:
         """
         Initialize a robot, world, control, and a goal for the robot to reach
         """
-        self.robot = Robot()
         self.world = World()
-        self.camera = Camera(self.world)  
+        self.camera = Camera(self.world)
+        self.robot = Robot(self.camera)  
         self.control = Control()
         self.interface = Interface(self.robot, self.camera, self.world)
               
@@ -84,23 +84,14 @@ class Simulation:
             # iterate a single step
             self.robot.step()
 
-            # get camera data
-            self.camera.view(self.robot.pose)
-            self.camera.into_array()
-            # self.camera.into_sam()
-
             # plot everything
             self.interface.update()
 
             nb_steps += 1
-
-            # plt.imshow(self.camera.annotated_image)
-
-            break
 
 
 if __name__ == "__main__":
     simulation = Simulation()
     simulation.run()
 
-    plt.show()
+    # plt.show()
