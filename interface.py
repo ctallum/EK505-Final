@@ -13,13 +13,14 @@ from camera import Camera
 
 black = (0, 0, 0)
 red = (255, 0, 0)
+white = (255, 255, 255)
 
 class Interface:
     """
     Class to contain all the pygame stuff needed to display all our graphs
     """
 
-    def __init__(self) -> None:
+    def __init__(self, robot: Robot, camera: Camera, world: World) -> None:
         """
         Initialize pygame setup
         """
@@ -31,6 +32,12 @@ class Interface:
         pygame.display.set_caption("EK505 Final")
 
         self.display = pygame.Surface((3750, 2500))
+
+        # setup objects
+        self.robot = robot
+        self.camera = camera
+        self.world = world
+
 
     def refresh_window(self) -> None:
         """
@@ -56,7 +63,7 @@ class Interface:
             display_size::tuple (height, width)
                 The updated height and width of the internal game display
             cords::tuple (x_cord, y_cord)
-                The cordinates of the upper left corner of the internal game display so that when
+                The coordinates of the upper left corner of the internal game display so that when
                 it is blit onto window, it is centered.
         """
         window_size = self.screen.get_size()
@@ -75,14 +82,17 @@ class Interface:
 
         return display_size, cords
 
-    def plot_world(self, world: World) -> None:
+    def plot_world(self) -> None:
         """
         Plots the world
         """
-        ground = pygame.image.load(world.ground)
-        self.display.blit(ground, (0, 0))
+        self.display.blit(self.world.ground, self.world.ground_pos)
 
-    def plot_robot(self, robot: Robot) -> None:
+        self.display.blit(self.world.obstacle, self.world.obstacle_pos)
+
+
+
+    def plot_robot(self) -> None:
         """
         Plot's the robot
         """
@@ -91,12 +101,12 @@ class Interface:
         robot_img = pygame.image.load("robot.png")
 
         # convert coordinates and change size
-        loc_x = robot.pose[0] * 200
-        loc_y = 2500 - robot.pose[1] * 200
+        loc_x = self.robot.pose[0] * 200
+        loc_y = 2500 - self.robot.pose[1] * 200
         robot_img = pygame.transform.scale(robot_img, (200, 200))
 
         # convert robot theta to degrees
-        robot_angle_deg = robot.pose[2] * 57.2958
+        robot_angle_deg = self.robot.pose[2] * 57.2958
 
         # rotate robot around the center
 
@@ -116,13 +126,13 @@ class Interface:
         # display robot
         self.display.blit(robot_img, (new_center))
 
-    def plot_camera_box(self, robot) -> None:
+    def plot_camera_box(self) -> None:
         """
         Plot a box in front of the robot that reflects what the robot can see
         """
-        theta = robot.pose[2]
-        loc_x = robot.pose[0] * 200 + 1 + 100*math.cos(theta)
-        loc_y = 2500 - robot.pose[1] * 200 - 100*math.sin(theta)
+        theta = self.robot.pose[2]
+        loc_x = self.robot.pose[0] * 200 + 1 + 100*math.cos(theta)
+        loc_y = 2500 - self.robot.pose[1] * 200 - 100*math.sin(theta)
 
         box = 400
 
@@ -150,7 +160,7 @@ class Interface:
                                              loc_y - box/2*math.cos(theta) - box*math.sin(theta)),
                                              width=10)
 
-    def plot_camera(self, camera: Camera, robot: Robot) -> None:
+    def plot_camera(self) -> None:
         """
         Plot the local view from the camera
         """
@@ -158,7 +168,7 @@ class Interface:
         camera_size = 1250
 
         # get view from camera
-        camera_view = camera.view(robot.pose)
+        camera_view = self.camera.view(self.robot.pose)
 
         # scale the camera view up
         camera_view = pygame.transform.scale(camera_view, (camera_size, camera_size))
@@ -172,7 +182,16 @@ class Interface:
         pygame.draw.line(self.display, black, (3750-camera_size, camera_size + 5),
                         (3750-camera_size, 0), width=20)
 
-    def update(self, robot: Robot, world: World, camera) -> None:
+
+    def plot_goal(self) -> None:
+        """
+        Plot the goal
+        """
+        goal_x, goal_y = self.world.goal
+        goal_loc = (goal_x * 200, 2500 - goal_y*200)
+        pygame.draw.circle(self.display, (0,255,0), goal_loc, radius=20)
+
+    def update(self) -> None:
         """
         Update the pygame window with all new movement
         """
@@ -188,9 +207,10 @@ class Interface:
                     sys.exit()
 
         # plot everything
-        self.plot_world(world)
-        self.plot_robot(robot)
-        self.plot_camera(camera, robot)
-        self.plot_camera_box(robot)
-
+        self.plot_world()
+        self.plot_robot()
+        self.plot_camera()
+        self.plot_camera_box()
+        self.plot_goal()
         self.refresh_window()
+

@@ -5,6 +5,8 @@ File to contain the world class. Contains information on background and objects
 import os
 import random
 
+import pygame
+
 
 class World:
     """
@@ -26,6 +28,13 @@ class World:
         self._obstacle_images = [
             "obstacles/" + name for name in os.listdir(self.obstacle_image_dir)]
 
+        # set the goal point that the robot is trying to reach
+        self.goal = (10,10)
+        
+        # set position of the obstacle
+        self.obstacle_pos = (5,5)
+
+        # generate the world
         self.generate_world()
 
     def list_images(self) -> None:
@@ -43,13 +52,43 @@ class World:
 
         # get random floor
         ground_idx = random.randint(0, len(self._ground_images)-1)
-        self._ground = self._ground_images[2]
+        self.ground = pygame.image.load(self._ground_images[0])
 
-        # print(floor_img)
+        # position of floor
+        self.ground_pos = (0,0)
 
-    @property
-    def ground(self) -> str:
-        """
-        Return the filename str of the ground image
-        """
-        return self._ground
+        # get random piece of wood
+        obstacle_idx = random.randint(0, len(self._obstacle_images) - 1)
+        self.obstacle = pygame.image.load(self._obstacle_images[obstacle_idx])
+
+        # set random scale of wood between 6in and 1ft
+        obstacle_size = random.random()*100 + 100 
+        obstacle_width = self.obstacle.get_width()
+        scale_factor = obstacle_size/obstacle_width
+        self.obstacle = pygame.transform.scale_by(self.obstacle, scale_factor)
+
+        # position of obstacle
+        obstacle_pos_x = self.obstacle_pos[0]
+        obstacle_pos_y = self.obstacle_pos[1]
+
+        self.obstacle_pos = (obstacle_pos_x *200 ,2500 - obstacle_pos_y*200)
+
+        # rotate obstacle
+        obstacle_rot = random.random()*360
+        self.obstacle = pygame.transform.rotate(self.obstacle, obstacle_rot)
+        
+        def rot_center(image, angle, x, y):
+            """
+            Helper function to rotate object around the center coordinate
+            """
+            rotated_image = pygame.transform.rotate(image, angle - 90)
+            new_rect = rotated_image.get_rect(center=image.get_rect(center=(x, y)).center)
+            return rotated_image, new_rect
+
+        self.obstacle, self.obstacle_pos = rot_center(self.obstacle, obstacle_rot, self.obstacle_pos[0], self.obstacle_pos[1])
+
+        self.obstacle.set_colorkey((255,255,255))
+
+
+
+        

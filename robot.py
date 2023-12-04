@@ -20,8 +20,7 @@ class Robot:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self._pose = [3, 12.5/2, 1.5]  # x,y,theta
-        self._pose = [3 + 2, 12.5/2, .5]
+        self._pose = [1, 1, math.pi/4]  # x,y,theta
 
         self._vel = [0, 0]  # l wheel vel, r wheel vel
 

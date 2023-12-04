@@ -20,4 +20,4 @@ class Control:
             vel: List[left_w, right_w]
         """
 
-        return [5, 6]
+        return [1, 1]

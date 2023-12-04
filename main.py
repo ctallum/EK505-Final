@@ -26,20 +26,21 @@ class Simulation:
         """
         self.robot = Robot()
         self.world = World()
+        self.camera = Camera(self.world)  
         self.control = Control()
-        self.interface = Interface()
-        self.camera = Camera(self.world)
-
-        # set the goal point that the robot is trying to reach
-        self.goal = [17, 6.25]
+        self.interface = Interface(self.robot, self.camera, self.world)
+              
 
     def is_over(self, nb_steps: int) -> bool:
         """
         Determine if the robot is close enough to the goal for the simulation to end or if it has
         reached the maximum number of steps
         """
-        dist_to_goal = math.sqrt((self.robot.pose[0] - self.goal[0])**2 +
-                                 (self.robot.pose[1] - self.goal[1])**2)
+        
+        goal = self.world.goal
+
+        dist_to_goal = math.sqrt((self.robot.pose[0] - goal[0])**2 +
+                                 (self.robot.pose[1] - goal[1])**2)
 
         if dist_to_goal < self.threshold or nb_steps > self.max_steps:
             return True
@@ -84,7 +85,7 @@ class Simulation:
             self.robot.step()
 
             # plot everything
-            self.interface.update(self.robot, self.world, self.camera)
+            self.interface.update()
 
             nb_steps += 1
 
