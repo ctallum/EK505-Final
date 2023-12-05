@@ -144,6 +144,7 @@ class ClfCbfControl:
         # Concatenate all obstacle convex hull points
         # into a single list
         all_hull_pts = []
+        
         for obs in self.world.obstacles:
             # Densify convex hull
             obs.densify(step)

@@ -25,11 +25,12 @@ def sort_cos(pts):
 
     nb_pts = pts.shape[1]
     pt_cos_list = []    # list of point, cosine pairs
-
+    
     # Compute polar angle of each point
     for idx in range(nb_pts):
         test_pt = pts[:,idx].reshape((2,1))
         if test_pt[1] == p0[1]:
+            nb_pts -= 1
             continue
         else:
             dx = test_pt[0] - p0[0]
@@ -42,7 +43,7 @@ def sort_cos(pts):
     # Sort points in the array by cosine value
     pts_sorted = np.zeros((2, nb_pts))
     pts_sorted[:,0] = p0.reshape((2,))
-    for idx in range(nb_pts-1):
+    for idx in range(nb_pts -1):
         pt_idx = cos_list_sorted[idx][0]        # point's index from original array
         pts_sorted[:,idx+1] = pts[:, pt_idx]
 

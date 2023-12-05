@@ -18,7 +18,7 @@ class Robot:
     wheel_diameter = 0.2
     track_width = 0.3
 
-    def __init__(self, camera: Camera) -> None:
+    def __init__(self, camera: Camera, rep_weight=3) -> None:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
@@ -28,6 +28,9 @@ class Robot:
 
         self.camera = camera
         self.detects_obstacles = False
+        self.obstacle_loc: np.ndarray = None
+        self.rep_weight = rep_weight
+        self.radius = .5
 
     @property
     def pose(self) -> List[int]:
@@ -105,9 +108,17 @@ class Robot:
         process_camera = True
         if process_camera:
             self.camera.get_processed_view(self.pose)
+            if self.camera.detects_obstacles:
+                self.detects_obstacles = self.camera.detects_obstacles
+                self.camera.into_global(self.pose)
+                self.obstacle_loc = self.camera.obstacle_loc
+                
+            else:
+                self.detects_obstacles = False
+
         else:
             self.camera.get_unprocessed_view(self.pose)
 
-        self.detects_obstacles = self.camera.detects_obstacles
+        
         
 

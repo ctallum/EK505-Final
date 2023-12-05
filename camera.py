@@ -3,7 +3,7 @@ File to contain the Camera class
 """
 
 import numpy as np
-from typing import List
+from typing import List, Tuple
 import math
 import pygame
 from matplotlib import pyplot as plt
@@ -41,8 +41,8 @@ class Camera:
         self.camera_view = pygame.Surface((self.box_view, self.box_view))
 
         self.detects_obstacles = False
-        self.obstacle_loc = None
-        self.obstacle_center = None
+        self.obstacle_loc: np.ndarray = None
+        self.obstacle_center: Tuple[float] = None
 
         # setup some SAM stuff
         # self.SAM = sam_model_registry["vit_h"](checkpoint="sam_vit_h_4b8939.pth")
@@ -68,7 +68,7 @@ class Camera:
         view_y_center = robot_y - (100 + self.box_view/2)*math.sin(theta)
 
         # crop the display to only the camera view
-        sub_crop = display.subsurface((view_x_center - .75*self.box_view, view_y_center - .75*self.box_view,
+        sub_crop = display.subsurface((view_x_center - .75*self.box_view, view_y_center - .75*self.box_view, 
                                        1.5*self.box_view, 1.5*self.box_view))
 
         # rotate the cropped section to account for the tilt of the robot
@@ -82,6 +82,10 @@ class Camera:
 
     def get_unprocessed_view(self, pose: List[int]):
         self.camera_view = self.get_raw_view(pose)
+
+        # # get output photo for Ben
+        # array = self.into_array(self.camera_view)
+        # plt.imshow(array)
 
     def get_processed_view(self, pose: List[int]):
         surface = self.get_raw_view(pose)
@@ -101,7 +105,7 @@ class Camera:
             mask = cv2.inRange(frame, lower, upper)#create mask with boundaries 
             mask = ~mask
 
-            plt.imshow(mask)
+            # plt.imshow(mask)
             cnts = cv2.findContours(mask, cv2.RETR_TREE, 
                                 cv2.CHAIN_APPROX_SIMPLE) # find contours from mask
             cnts = imutils.grab_contours(cnts)
@@ -119,12 +123,12 @@ class Camera:
             c = np.reshape(c,(-1,2) )
             
             self.obstacle_loc = c
+
             self.obstacle_center = (cx,cy)
 
             self.detects_obstacles = True
         else: 
             self.detects_obstacles = False
-
 
 
 
@@ -181,4 +185,35 @@ class Camera:
 
     def into_surface(self, array) -> None:
         self.camera_view = pygame.surfarray.make_surface(array)
+
+
+    def into_global(self, pose: List[float]) -> None:
+        array = self.obstacle_loc
+
+        # change array 
+        array = np.fliplr(array)
+        array[:,1] = self.box_view - array[:,1] 
+
+
+        # print(array)
+        array[:,0] = array[:,0] -  self.box_view/2
+        array[:,1] = array [:,1] + 100 
+
+        theta = pose[2]
+
+        
+
+        rot_array = np.array([[math.cos(-theta), math.sin(-theta)],
+                                [-math.sin(-theta), math.cos(-theta)]])
+        
+        array = array @ rot_array
+
+        array[:,0] = array[:,0] + pose[0]*200
+        array[:,1] = array[:,1] + pose[1]*200
+
+        array = array/200
+
+
+        self.obstacle_loc = array
+
 

@@ -27,7 +27,7 @@ class Simulation:
         self.world = World()
         self.camera = Camera(self.world)
         self.robot = Robot(self.camera)  
-        self.control = Control()
+        self.control = Control(self.robot, self.world)
         self.interface = Interface(self.robot, self.camera, self.world)
               
 
@@ -51,7 +51,7 @@ class Simulation:
         """
         Get control for robot given current pose of the robot and the world [TODO]
         """
-        return self.control.control(self.robot.pose)
+        return self.control.control()
 
     def plot(self) -> None:
         """
@@ -79,19 +79,26 @@ class Simulation:
             control = self.get_control()
 
             # set the control for the robot
-            self.robot.vel = control
+            self.robot.pose[0] = self.robot.pose[0] + control[0].item() * .1
+            self.robot.pose[1] = self.robot.pose[1] + control[1].item() * .1
+
 
             # iterate a single step
             self.robot.step()
+
+            # if self.robot.detects_obstacles:
+            #     print(self.robot.obstacle_loc)
 
             # plot everything
             self.interface.update()
 
             nb_steps += 1
 
+            # break
+
 
 if __name__ == "__main__":
     simulation = Simulation()
     simulation.run()
 
-    # plt.show()
+    plt.show()
