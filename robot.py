@@ -18,11 +18,11 @@ class Robot:
     wheel_diameter = 0.2
     track_width = 0.3
 
-    def __init__(self, camera: Camera, rep_weight=.2) -> None:
+    def __init__(self, camera: Camera, rep_weight=.1) -> None:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self.pose = [1, 1, math.pi/4]  # x,y,theta
+        self.pose = [3, 1, math.pi/2]  # x,y,theta
 
         self.vel = [0, 0]  # l wheel vel, r wheel vel
 
@@ -60,7 +60,7 @@ class Robot:
             new_theta = cur_theta
 
             # set new pose
-            self._pose = [new_x, new_y, new_theta]
+            self.pose = [new_x, new_y, new_theta]
 
         # if robot is not going straight, it is going along some arch
         else:
@@ -82,7 +82,7 @@ class Robot:
                                 [omega*dt]])
 
             # set new pose
-            self._pose = new_pos.T[0].tolist()
+            self.pose = new_pos.T[0].tolist()
         
         # update camera
         process_camera = True

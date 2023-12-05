@@ -6,7 +6,7 @@ import convex_hull
 import matplotlib.pyplot as plt
 import numpy as np
 cvx.solvers.options['show_progress'] = False
-
+import math
 
 from typing import List
 
@@ -21,22 +21,24 @@ class Control:
     def __init__(self, robot: Robot, world: World) -> None:
         self.robot = robot
         self.world = world
+        self.max_lin_vel = 1
+        self.max_angular_vel = 4
     
-    def distance(self, x_eval, x_hull):
+    def distance(self, x_eval: np.ndarray, x_hull: np.ndarray) -> float:
         """
         Computes Euclidean distance between point on an obstacle 
         hull and the edge of the robot
         """
         return np.linalg.norm(x_eval - x_hull) - self.robot.radius
 
-    def grad_distance(self, x_eval, x_hull):
+    def grad_distance(self, x_eval: np.ndarray, x_hull: np.ndarray) -> float:
         """
         Computes gradient of Euclidean distance between point on obstacle 
         """
         # print("shape",x_hull)
         return (x_eval - x_hull)/np.linalg.norm(x_eval - x_hull)
 
-    def reference(self, x_eval, p):
+    def reference(self, x_eval: np.ndarray, p: float) -> np.ndarray:
         """
         Computes references controller for goal location, grad u_attr
         """
@@ -45,10 +47,10 @@ class Control:
         grad_u_attr = p * np.linalg.norm(x_eval - x_goal)**(p-2) * (x_eval - x_goal)
         return - grad_u_attr
 
-    def control(self, step=0.2):
+    def control(self, step: float=0.2) -> np.ndarray:
         """
         Computes optimal (CBF/CLF) control based on current position of 
-        robot (x_eval)
+        robot (x_eval), returns vector pointing in control direction
         """
         c_h = self.robot.rep_weight # CBF parameter
         x_eval = self.robot.pose[0:2]
@@ -56,12 +58,10 @@ class Control:
         # Compute reference control
         u_ref = self.reference(x_eval, 1)
 
-        # Concatenate all obstacle convex hull points
-        # into a single list
+        # Concatenate all obstacle convex hull points into a single list
         all_hull_pts = []
 
         if self.robot.detects_obstacles:
-            
             obs_pts = np.unique(self.robot.obstacle_loc.T, axis = 1)
             obs = DetectedObstacle(obs_pts)
 
@@ -82,14 +82,29 @@ class Control:
                 b_barrier[idx,0] = - c_h * h
 
             u_opt = qp_supervisor(a_barrier, b_barrier, u_ref)
-
-            return u_opt
-
         else:
-            return u_ref
+            u_opt = u_ref
+            # print(u_opt)
+
+        # calculate wheel vel
+        u_opt_angle = math.atan2(u_opt[1], u_opt[0])
+
+        angular_dif = self.robot.pose[2] - u_opt_angle
+
+        def ddr_ik(v_x: float, omega: float, L=self.robot.track_width, r=self.robot.wheel_diameter):
+            #DDR inverse kinematics: calculate wheels speeds from desired velocity
+            return [(v_x - (L/2)*omega)/r, (v_x + (L/2)*omega)/r]
+        
+        # map angular diff to angular_ve
+        omega = -2*self.max_angular_vel/math.pi*angular_dif
+
+        return ddr_ik(self.max_lin_vel, omega)
+
+
+        
     
 
-def qp_supervisor(a_barrier, b_barrier, u_ref=None, solver='cvxopt'):
+def qp_supervisor(a_barrier: np.ndarray, b_barrier:np.ndarray, u_ref: np.ndarray=None, solver='cvxopt') -> np.ndarray:
     """
     Solves the QP min_u ||u-u_ref||^2 subject to a_barrier*u+b_barrier<=0
     For the list of supported solvers, see https://pypi.org/project/qpsolvers/

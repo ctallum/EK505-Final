@@ -133,7 +133,7 @@ class Interface:
         loc_x = self.robot.pose[0] * 200 + 1 + 100*math.cos(theta)
         loc_y = 2500 - self.robot.pose[1] * 200 - 100*math.sin(theta)
 
-        box = 400
+        box = self.camera.box_view
 
         pygame.draw.line(self.display, red, (loc_x + box/2*math.sin(theta),
                                              loc_y + box/2*math.cos(theta)),

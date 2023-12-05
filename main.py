@@ -79,9 +79,9 @@ class Simulation:
             control = self.get_control()
 
             # set the control for the robot
-            self.robot.pose[0] = self.robot.pose[0] + control[0].item() * .1
-            self.robot.pose[1] = self.robot.pose[1] + control[1].item() * .1
-
+            # self.robot.pose[0] = self.robot.pose[0] + control[0].item() * .1
+            # self.robot.pose[1] = self.robot.pose[1] + control[1].item() * .1
+            self.robot.vel = control
 
             # iterate a single step
             self.robot.step()
@@ -95,6 +95,8 @@ class Simulation:
             nb_steps += 1
 
             # break
+            # while(1):
+            #     a = 1
 
 
 if __name__ == "__main__":
