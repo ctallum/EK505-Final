@@ -10,7 +10,6 @@ from matplotlib import pyplot as plt
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 import cv2
 import supervision as sv
-import time
 import imutils
 
 from world import World
@@ -58,9 +57,6 @@ class Camera:
         """
         display = self.display
 
-        # set viewing range of camera (200px = 1ft)
-
-
         # get pose of the robot in pixels
         robot_x = pose[0] * 200
         robot_y = 2500 - pose[1] * 200
@@ -102,40 +98,34 @@ class Camera:
         lower = np.array([80,80,80])
         upper = np.array([180,180,180])
 
-        
-
         def find_color(frame, lower, upper):
             mask = cv2.inRange(frame, lower, upper)#create mask with boundaries 
             mask = ~mask
 
             # plt.imshow(mask)
-            cnts = cv2.findContours(mask, cv2.RETR_TREE, 
-                                cv2.CHAIN_APPROX_SIMPLE) # find contours from mask
+            cnts = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contours from mask
             cnts = imutils.grab_contours(cnts)
             for c in cnts:
-                area = cv2.contourArea(c) # find how big countour is
+                area = cv2.contourArea(c) # find how big contour is
                 # print(area)
-                if 20000 >area > 1000:       # only if countour is big enough, then
+                if 20000 >area > 1000:       # only if contour is big enough, then
                     M = cv2.moments(c)
                     cx = int(M['m10'] / M['m00']) # calculate X position
                     cy = int(M['m01'] / M['m00']) # calculate Y position
                     return c, cx, cy
 
+        # if obstacle is found
         if find_color(array, lower, upper):
             c, cx, cy = find_color(array, lower, upper)
             c = np.reshape(c,(-1,2) )
-            
             self.obstacle_loc = c
-
             self.obstacle_center = (cx,cy)
-
             self.detects_obstacles = True
         else: 
             self.detects_obstacles = False
 
 
-
-    def into_array(self, surface) -> np.ndarray:
+    def into_array(self, surface: pygame.Surface) -> np.ndarray:
         """
         Convert camera data from Pygame surface into a camera picture array (nxnx3)
         """
@@ -146,15 +136,10 @@ class Camera:
 
 
     def into_sam(self) -> None:
-        start = time.time()
-
-        print("starting mask")
+        """
+        Take camera data and push it into SAM model
+        """
         output_mask = self.mask_generator.generate(self.camera_view_array)
-        print("done mask")
-        # print(output_mask)
-        end = time.time()
-        print(end - start)
-
 
         mask_annotator = sv.MaskAnnotator(color_map = "index")
         detections = sv.Detections.from_sam(output_mask)
@@ -162,23 +147,17 @@ class Camera:
 
         self.annotated_image = annotated_image
 
-        # sv.plot_images_grid(
-        #     images=[self.camera_view_array, annotated_image],
-        #     grid_size=(1, 2),
-        #     titles=['source image', 'segmented image']
-        # )
 
-    def into_color_mask(self, img) -> None:
-
+    def into_color_mask(self, img: np.ndarray) -> None:
+        """
+        Perform image segmentation using k-clustering
+        """
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-
-        
         twoDimage = img.reshape((-1,3))
         twoDimage = np.float32(twoDimage)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
         K = 2
         attempts=10
-
         ret,label,center=cv2.kmeans(twoDimage,K,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
         center = np.uint8(center)
         res = center[label.flatten()]
@@ -186,36 +165,40 @@ class Camera:
 
         return result_image
 
-    def into_surface(self, array) -> None:
+    def into_surface(self, array: np.ndarray) -> None:
+        """
+        Convert the camera view into a pygame surface from a np.ndarray
+        """
         self.camera_view = pygame.surfarray.make_surface(array)
 
 
     def into_global(self, pose: List[float]) -> None:
+        """
+        Take the position of an object in the frame of the camera and find the global coordinates
+        """
         array = self.obstacle_loc
 
-        # change array 
+        # change array from wonky pygame coordinate system
         array = np.fliplr(array)
         array[:,1] = self.box_view - array[:,1] 
 
-
-        # print(array)
+        # shift from camera system to robot system
         array[:,0] = array[:,0] -  self.box_view/2
         array[:,1] = array [:,1] + 100 
 
+        # unrotate camera
         theta = pose[2]
-
-        
-
         rot_array = np.array([[math.cos(-theta), math.sin(-theta)],
                                 [-math.sin(-theta), math.cos(-theta)]])
         
         array = array @ rot_array
 
+        # shift back to origin
         array[:,0] = array[:,0] + pose[0]*200
         array[:,1] = array[:,1] + pose[1]*200
 
+        # convert out of pixel coordinates to global coords
         array = array/200
-
 
         self.obstacle_loc = array
 

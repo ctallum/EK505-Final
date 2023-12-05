@@ -92,7 +92,6 @@ class Interface:
             self.display.blit(obstacle.surface, obstacle.surf_pos)
 
 
-
     def plot_robot(self) -> None:
         """
         Plot's the robot
@@ -110,7 +109,6 @@ class Interface:
         robot_angle_deg = self.robot.pose[2] * 57.2958
 
         # rotate robot around the center
-
         def rot_center(image, angle, x, y):
             """
             Helper function to rotate object around the center coordinate
