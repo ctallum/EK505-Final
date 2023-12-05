@@ -22,7 +22,8 @@ class Control:
         self.robot = robot
         self.world = world
         self.max_lin_vel = 1
-        self.max_angular_vel = 4
+        self.max_angular_vel = 8
+        self.prior_obstacles_detected: List[DetectedObstacle]= []
     
     def distance(self, x_eval: np.ndarray, x_hull: np.ndarray) -> float:
         """
@@ -50,7 +51,8 @@ class Control:
     def control(self, step: float=0.2) -> np.ndarray:
         """
         Computes optimal (CBF/CLF) control based on current position of 
-        robot (x_eval), returns vector pointing in control direction
+        robot (x_eval), returns set of wheel velocities that point robot into
+        the direction of u_optimal
         """
         c_h = self.robot.rep_weight # CBF parameter
         x_eval = self.robot.pose[0:2]
@@ -61,11 +63,15 @@ class Control:
         # Concatenate all obstacle convex hull points into a single list
         all_hull_pts = []
 
-        if self.robot.detects_obstacles:
-            obs_pts = np.unique(self.robot.obstacle_loc.T, axis = 1)
-            obs = DetectedObstacle(obs_pts)
+        if self.robot.detects_obstacles or len(self.prior_obstacles_detected) > 0:
+            if self.robot.detects_obstacles:
+                obs_pts = np.unique(self.robot.obstacle_loc.T, axis = 1)
+                obs = DetectedObstacle(obs_pts)
+                obs.densify(step)
+                self.prior_obstacles_detected.append(obs)
+            else:
+                obs = self.prior_obstacles_detected[-1]
 
-            obs.densify(step)
             for pt in obs.c_hull:
                 all_hull_pts.append(pt)
             tot_hull_pts = len(all_hull_pts)
@@ -84,7 +90,6 @@ class Control:
             u_opt = qp_supervisor(a_barrier, b_barrier, u_ref)
         else:
             u_opt = u_ref
-            # print(u_opt)
 
         # calculate wheel vel
         u_opt_angle = math.atan2(u_opt[1], u_opt[0])
@@ -100,8 +105,6 @@ class Control:
 
         return ddr_ik(self.max_lin_vel, omega)
 
-
-        
     
 
 def qp_supervisor(a_barrier: np.ndarray, b_barrier:np.ndarray, u_ref: np.ndarray=None, solver='cvxopt') -> np.ndarray:

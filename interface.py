@@ -6,10 +6,13 @@ import math
 import pygame
 from pygame.locals import *
 import sys
+import vidmaker
+
 
 from world import World, Obstacle
 from robot import Robot
 from camera import Camera
+
 
 black = (0, 0, 0)
 red = (255, 0, 0)
@@ -26,7 +29,7 @@ class Interface:
         """
         pygame.init()
 
-        WINDOW_SIZE = (900, 600)
+        WINDOW_SIZE = (600*3, 600*2)
 
         self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
         pygame.display.set_caption("EK505 Final")

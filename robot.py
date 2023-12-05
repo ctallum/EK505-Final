@@ -18,11 +18,11 @@ class Robot:
     wheel_diameter = 0.2
     track_width = 0.3
 
-    def __init__(self, camera: Camera, rep_weight=.1) -> None:
+    def __init__(self, camera: Camera, rep_weight=.2) -> None:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self.pose = [3, 1, math.pi/2]  # x,y,theta
+        self.pose = [1, 1, math.pi/3]  # x,y,theta
 
         self.vel = [0, 0]  # l wheel vel, r wheel vel
 
@@ -30,7 +30,7 @@ class Robot:
         self.detects_obstacles = False
         self.obstacle_loc: np.ndarray = None
         self.rep_weight = rep_weight
-        self.radius = .5
+        self.radius = 1.5
 
 
     def step(self, time_step: float = .05) -> None:

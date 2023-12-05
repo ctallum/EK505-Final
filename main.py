@@ -5,12 +5,16 @@ Main file to run the simulation of the robot obstacle avoidance. Includes the Si
 import math
 from typing import List
 from matplotlib import pyplot as plt
+from pygame_screen_record import *
+
 
 from robot import Robot
 from world import World
 from control import Control
 from interface import Interface
 from camera import Camera
+
+import time as t
 
 
 class Simulation:
@@ -19,6 +23,7 @@ class Simulation:
     """
     threshold = 0.1
     max_steps = 1000  # set the maximum number of steps the robot can go to
+    robot_repulsive_weight = 0.2
 
     def __init__(self) -> None:
         """
@@ -26,10 +31,10 @@ class Simulation:
         """
         self.world = World()
         self.camera = Camera(self.world)
-        self.robot = Robot(self.camera)  
+        self.robot = Robot(self.camera, self.robot_repulsive_weight)  
         self.control = Control(self.robot, self.world)
         self.interface = Interface(self.robot, self.camera, self.world)
-              
+            
 
     def is_over(self, nb_steps: int) -> bool:
         """
@@ -72,35 +77,25 @@ class Simulation:
         """
         Run the simulation until either the robot reaches the end the number of steps expires
         """
-
         nb_steps = 0
         while not self.is_over(nb_steps):
             # get control for the robot
             control = self.get_control()
 
             # set the control for the robot
-            # self.robot.pose[0] = self.robot.pose[0] + control[0].item() * .1
-            # self.robot.pose[1] = self.robot.pose[1] + control[1].item() * .1
             self.robot.vel = control
 
             # iterate a single step
             self.robot.step()
-
-            # if self.robot.detects_obstacles:
-            #     print(self.robot.obstacle_loc)
 
             # plot everything
             self.interface.update()
 
             nb_steps += 1
 
-            # break
-            # while(1):
-            #     a = 1
-
 
 if __name__ == "__main__":
+    
     simulation = Simulation()
     simulation.run()
 
-    plt.show()
