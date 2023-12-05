@@ -31,11 +31,14 @@ class Camera:
         self.box_view = 400
 
         # setup internal surface for virtual camera tracking
-        self._display = pygame.Surface((3570, 2500))
+        self.display = pygame.Surface((3570, 2500))
         ground = self.world.ground
-        obstacle = self.world.obstacle
-        self._display.blit(ground, self.world.ground_pos)
-        self._display.blit(obstacle, self.world.obstacle_pos)
+
+        self.display.blit(ground, self.world.ground_pos)
+
+        for obstacle in self.world.obstacles:
+            self.display.blit(obstacle.surface, obstacle.surf_pos)
+
 
         # setup surface for camera view
         self.camera_view = pygame.Surface((self.box_view, self.box_view))
@@ -53,7 +56,7 @@ class Camera:
         Take the robot's pose and generate a png image that represent's the virtual
         camera's view
         """
-        display = self._display
+        display = self.display
 
         # set viewing range of camera (200px = 1ft)
 

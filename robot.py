@@ -18,13 +18,13 @@ class Robot:
     wheel_diameter = 0.2
     track_width = 0.3
 
-    def __init__(self, camera: Camera, rep_weight=3) -> None:
+    def __init__(self, camera: Camera, rep_weight=.2) -> None:
         """
         Initialize the pose and velocity at zero, initialize camera object
         """
-        self._pose = [1, 1, math.pi/4]  # x,y,theta
+        self.pose = [1, 1, math.pi/4]  # x,y,theta
 
-        self._vel = [0, 0]  # l wheel vel, r wheel vel
+        self.vel = [0, 0]  # l wheel vel, r wheel vel
 
         self.camera = camera
         self.detects_obstacles = False
@@ -32,26 +32,6 @@ class Robot:
         self.rep_weight = rep_weight
         self.radius = .5
 
-    @property
-    def pose(self) -> List[int]:
-        """
-        Return the pose of the robot as list of [x_pos, y_pos, theta]
-        """
-        return self._pose
-
-    @property
-    def vel(self) -> List[int]:
-        """
-        Return the velocity of the robot as list of [l_vel, r_vel] in rad/sec
-        """
-        return self._vel
-
-    @vel.setter
-    def vel(self, vel: List[int]) -> None:
-        """
-        Set the velocity of the wheels. Input argument as list [l_vel, r_vel] in rad/sec
-        """
-        self._vel = vel
 
     def step(self, time_step: float = .05) -> None:
         """

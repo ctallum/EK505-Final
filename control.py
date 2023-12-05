@@ -11,26 +11,13 @@ cvx.solvers.options['show_progress'] = False
 from typing import List
 
 from robot import Robot
-from world import World
+from world import World, DetectedObstacle
 
 
 class Control:
     """
     Class to control the robot depending on it's pose and what it can see
     """
-    # @staticmethod
-    # def control(pose: List[int]) -> List[int]:
-    #     """
-    #     Give controls to the robot. Controls take form of left and right wheel velocities in rad/sec
-    #     Inputs:
-    #         pose: List[x_pos, y_pos, theta]
-    #         world: World class containing location of obstacles
-    #     Return:
-    #         vel: List[left_w, right_w]
-    #     """
-
-    #     return [0, 0]
-
     def __init__(self, robot: Robot, world: World) -> None:
         self.robot = robot
         self.world = world
@@ -76,9 +63,7 @@ class Control:
         if self.robot.detects_obstacles:
             
             obs_pts = np.unique(self.robot.obstacle_loc.T, axis = 1)
-            obs = Obstacle(obs_pts)
-
-            
+            obs = DetectedObstacle(obs_pts)
 
             obs.densify(step)
             for pt in obs.c_hull:
@@ -104,7 +89,6 @@ class Control:
             return u_ref
     
 
-
 def qp_supervisor(a_barrier, b_barrier, u_ref=None, solver='cvxopt'):
     """
     Solves the QP min_u ||u-u_ref||^2 subject to a_barrier*u+b_barrier<=0
@@ -126,37 +110,4 @@ def qp_supervisor(a_barrier, b_barrier, u_ref=None, solver='cvxopt'):
     solution = cvx.solvers.qp(p_qp, q_qp, G=g_qp, h=h_qp, solver=solver)
     return np.array(solution['x'])
 
-class Obstacle():
-    """
-    Class representing obstacles in the robots environment
-    """
-    def __init__(self, pts):
-        self.pts = pts
-        # Compute convex hull of obstacle points
-        self.c_hull = convex_hull.graham_scan(self.pts)
 
-    def densify(self, step):
-        """
-        Increase density of points in obstacle convex hull 
-        at increments 'step' along each edge
-        """
-        self.c_hull = convex_hull.densify(self.c_hull, step)
-
-    def plot(self, obs_points = False, hull_pts = False, hull = True):
-        """
-        Plots obstacle
-        """
-        if obs_points:  # plot individual points
-            plt.scatter(self.pts[0,:], self.pts[1,:])
-        
-        if hull_pts:    # plot hull points
-            for elem in self.c_hull:
-                plt.scatter(elem[0], elem[1])
-
-        if hull:    # plot convex hull
-            hull_x = []
-            hull_y = []
-            for elem in self.c_hull:
-                hull_x.append(elem[0])
-                hull_y.append(elem[1])
-            plt.plot(hull_x, hull_y,'r-')

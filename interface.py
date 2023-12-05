@@ -7,7 +7,7 @@ import pygame
 from pygame.locals import *
 import sys
 
-from world import World
+from world import World, Obstacle
 from robot import Robot
 from camera import Camera
 
@@ -88,7 +88,8 @@ class Interface:
         """
         self.display.blit(self.world.ground, self.world.ground_pos)
 
-        self.display.blit(self.world.obstacle, self.world.obstacle_pos)
+        for obstacle in self.world.obstacles:
+            self.display.blit(obstacle.surface, obstacle.surf_pos)
 
 
 

@@ -100,6 +100,8 @@ def densify(convex, step):
         else:
             pt = convex[-1]
             pt2 = convex[0]
+        if (np.linalg.norm(pt2 - pt)) == 0:
+            continue
         direction = (pt2 - pt) / np.linalg.norm(pt2 - pt)
         pt_new = pt + direction * step
         while np.linalg.norm(pt2-pt_new) > step:
